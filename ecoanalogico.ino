@@ -32,7 +32,7 @@ uint32_t t_last_tm;           // take measurement
 struct analogicalMeasure
    {  char name[3];  
       uint8_t pin ;
-      uint8_t rangeSensor;
+      float rangeSensor;
       uint16_t numMeasures;
       uint32_t sumMeasures;
    } ;
@@ -52,6 +52,9 @@ void setup() {
   // analogicSensorBegin();
   t_last_tx= millis();
   t_last_tm= millis();
+
+  // Referencia de 1,1V
+  analogReference(INTERNAL);
 
   Serial.println("Inciio del microcontrolador");
   delay(100);
@@ -121,8 +124,10 @@ void buildAnalogicMessage(){
     if (DEBUG) Serial.print(F("device number= "));
     if (DEBUG) Serial.println(sen); 
     String name_18 = analogicalMeasures[sen]->name ;
-    uint32_t value_17 = analogicalMeasures[sen]->sumMeasures / analogicalMeasures[sen]->numMeasures;
-    String value_18 = String(value_17);
+    
+    float value_0 = float(analogicalMeasures[sen]->sumMeasures / analogicalMeasures[sen]->numMeasures)*analogicalMeasures[sen]->rangeSensor/1024;
+    
+    String value_18 = String(value_0);
     // añadir el redondeo según el resto
     // Añadir numero con dos decimales
     
