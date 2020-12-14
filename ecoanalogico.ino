@@ -2,24 +2,15 @@
 #define DEBUG 0
 
 #define BPS 115200
-
+#define RXPIN 12
+#define TXPIN 11
 
 // *******************************************************
 
 
 #include <SoftwareSerial.h>
-#define RXPIN 12    //11
-#define TXPIN 11    //12
+
 SoftwareSerial wifiSerialInit (RXPIN,TXPIN);
-
-/*******************************************/
-/* Deficnicion de funciones *******/
-/*******************************************/
-void buildMessageToTx();
-void takeAnalogicMeasures();
-void resetAnalogicMeasures();
-void analogicSensorBegin();
-
 
 /*******************************************/
 /* Deficnicion de variables *******/
@@ -41,6 +32,14 @@ analogicalMeasure am0, am1, am2, am3, am4, am5;
 
 analogicalMeasure *analogicalMeasures[] = {&am0, &am1, &am2, &am3, &am4, &am5};
 
+
+/*******************************************/
+/* Deficnicion de funciones *******/
+/*******************************************/
+void buildMessageToTx();
+void takeAnalogicMeasures();
+void resetAnalogicMeasures();
+void analogicSensorBegin();
 
 
 void setup() {
@@ -114,28 +113,26 @@ void resetAnalogicMeasures(){
 
 
 void buildAnalogicMessage(){
-  
-  if (DEBUG) Serial.print(F("**** build_analogic_message() "));  
   String message_to_tx ="";
   
-  for (uint8_t sen = 0; sen < numberOfDevices; sen++){
+  if(DEBUG) Serial.print(F("**** build_analogic_message() "));
 
-    if (DEBUG) Serial.println(sen);
+  for (uint8_t sen = 0; sen < numberOfDevices; sen++){    
+    String name_18 = analogicalMeasures[sen]->name ; 
+    
+    float value_float = float(analogicalMeasures[sen]->sumMeasures*analogicalMeasures[sen]->rangeSensor/analogicalMeasures[sen]->numMeasures)/1024;
+    String value_18 = String(value_float,1);
+
+    message_to_tx += name_18 + ":" + value_18 ;
+    if (sen < (numberOfDevices -1)) {message_to_tx +=",";}
+    
     if (DEBUG) Serial.print(F("device number= "));
     if (DEBUG) Serial.println(sen); 
-    String name_18 = analogicalMeasures[sen]->name ;
-    
-    float value_0 = float(analogicalMeasures[sen]->sumMeasures / analogicalMeasures[sen]->numMeasures)*analogicalMeasures[sen]->rangeSensor/1024;
-    
-    String value_18 = String(value_0);
-    // añadir el redondeo según el resto
-    // Añadir numero con dos decimales
-    
-    if (DEBUG) Serial.println(name_18 + ":" + value_18);
-    message_to_tx = message_to_tx + name_18 + ":" + value_18 ;
-    if (sen < (numberOfDevices -1)) {message_to_tx +=",";}
-    Serial.println(message_to_tx);
-    if (message_to_tx != "") { wifiSerialInit.println (message_to_tx);}
-    delay(100);
+    if (DEBUG) Serial.println(name_18 + ":" + value_18);  
+  
   }
+  if (message_to_tx != "") { wifiSerialInit.println (message_to_tx);}
+  resetAnalogicMeasures();
+  delay(10);
+  if(DEBUG) {Serial.println(message_to_tx);delay(100);} 
 }
